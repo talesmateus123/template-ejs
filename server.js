@@ -1,7 +1,10 @@
 // server.js
+import dotenv from 'dotenv';
 import app from './routes.js';
 
-const port = 3000;
+dotenv.config();
+
+const port = process.env.PORT || 3000;
 
 // Configurar o EJS como motor de templates
 app.set('view engine', 'ejs');
