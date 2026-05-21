@@ -69,7 +69,34 @@ projeto-ejs/
 ├── .env               # Variáveis de ambiente (não versionado)
 ├── views/             # Templates EJS
 │   └── index.ejs      # Página principal
-└── public/            # Arquivos estáticos (CSS, JS, imagens)
+└── public/            # Arquivos estáticos (servidos pelo Express)
+    ├── css/           # Arquivos de estilo (CSS)
+    │   └── index.css  # Estilos principais
+    └── assets/        # Imagens, fontes e outros recursos
+        ├── images/    # Imagens do projeto
+        ├── fonts/     # Fontes customizadas
+        └── ...        # Outros recursos
+```
+
+### 📁 Organização de Arquivos Estáticos
+
+- **`public/css/`** - Todos os arquivos CSS do projeto
+  - `index.css` - Estilos globais e componentes
+  
+- **`public/assets/`** - Recursos multimídia e fontes
+  - `images/` - Imagens PNG, JPG, SVG, etc.
+  - `fonts/` - Fontes customizadas
+  
+No EJS, referencie esses arquivos assim:
+```html
+<!-- CSS -->
+<link rel="stylesheet" href="/css/index.css">
+
+<!-- Imagem -->
+<img src="/assets/images/logo.png" alt="Logo">
+
+<!-- Fonte -->
+<link href="/assets/fonts/myfont.woff2" rel="preload" as="font">
 ```
 
 ## 📦 Dependências Principais
@@ -85,7 +112,11 @@ projeto-ejs/
 - Use `npm run start` para executar em produção
 - Configure seu `.env` antes de iniciar o servidor
 - Os templates EJS ficam na pasta `views/`
-- Arquivos estáticos (CSS, JS) vão em `public/`
+- CSS e JS vão em `public/css/`
+- Imagens, fontes e outros assets vão em `public/assets/`
+- O Express serve automaticamente tudo da pasta `public/`
+- Para adicionar estilos, crie arquivos em `public/css/` e importe no EJS
+- Organize as imagens em subpastas dentro de `public/assets/images/` por tema
 
 ---
 
