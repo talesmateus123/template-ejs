@@ -2,6 +2,9 @@ import express from "express";
 import database from "./database.js";
 const app = express();
 
+// Servir arquivos estáticos da pasta public (CSS, JS, imagens)
+app.use(express.static('public'));
+
 // Middleware para parsear dados do formulário
 app.use(express.urlencoded({ extended: true }));
 app.use(express.json());

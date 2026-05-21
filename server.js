@@ -6,6 +6,7 @@ dotenv.config();
 
 const port = process.env.PORT || 3000;
 
+
 // Configurar o EJS como motor de templates
 app.set('view engine', 'ejs');
 
