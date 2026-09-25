@@ -1,0 +1,50 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <meta name="theme-color" content="#f7f4ee">
+    <title><%= titulo %> | Prato Vivo</title>
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=DM+Sans:wght@400;500;600;700&family=Fraunces:opsz,wght@9..144,600;9..144,700&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="/css/main.css">
+    <link rel="stylesheet" href="/css/student.css">
+</head>
+<body class="student-page">
+    <main class="student-shell">
+        <header class="student-header">
+            <a class="brand" href="/aluno"><span class="brand-mark">✦</span><span>prato <strong>vivo</strong></span></a>
+            <span class="student-header-label">ÁREA DO ALUNO</span>
+        </header>
+        <section id="student-login" class="student-login">
+            <p class="eyebrow">ACESSO DO ALUNO</p>
+            <h1>Seu dia,<br><em>bem alimentado.</em></h1>
+            <p>Digite sua matrícula ou o código único entregue pela escola para consultar o cardápio e confirmar sua presença.</p>
+            <form id="student-login-form">
+                <label for="student-identifier">Matrícula ou código do aluno</label>
+                <div class="student-code-entry"><input id="student-identifier" name="identifier" autocomplete="off" autocapitalize="characters" maxlength="32" placeholder="Ex.: 20240128" required><button class="primary-button" type="submit">Registrar matrícula</button></div>
+                <p id="student-login-feedback" class="student-feedback" aria-live="polite"></p>
+            </form>
+        </section>
+        <section id="student-content" class="student-content" hidden>
+            <div class="student-welcome"><div><p class="eyebrow" id="student-class"></p><h1>Olá, <em id="student-name"></em></h1><p>Veja as refeições e confirme sua presença para hoje.</p></div><button id="student-logout" class="text-button" type="button">Sair</button></div>
+            <section class="student-section">
+                <div class="student-section-heading"><div><p class="eyebrow">HOJE</p><h2>Cardápio do dia</h2></div><time id="student-today"></time></div>
+                <div id="student-today-menu" class="student-today-menu"></div>
+                <form id="student-attendance-form" class="student-attendance-form">
+                    <fieldset><legend>Quais refeições você vai comer?</legend><div id="student-meal-choices" class="student-meal-choices"></div></fieldset>
+                    <p id="student-attendance-feedback" class="student-feedback" aria-live="polite"></p>
+                    <button id="student-confirm-button" class="primary-button" type="submit">Confirmar presença</button>
+                </form>
+                <div id="student-confirmed" class="student-confirmed" role="status" hidden></div>
+            </section>
+            <section class="student-section student-week-section">
+                <div class="student-section-heading"><div><p class="eyebrow">PRÓXIMOS DIAS</p><h2>Cardápio da semana</h2></div></div>
+                <div id="student-week-menu" class="student-week-menu"></div>
+            </section>
+        </section>
+    </main>
+    <script src="/js/student.js"></script>
+</body>
+</html>

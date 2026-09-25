@@ -1,0 +1,32 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <meta name="theme-color" content="#f7f4ee">
+    <title><%= titulo %> | Prato Vivo</title>
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=DM+Sans:wght@400;500;600;700&family=Fraunces:opsz,wght@9..144,600;9..144,700&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="/css/main.css">
+    <link rel="stylesheet" href="/css/student.css">
+</head>
+<body class="student-page">
+    <main class="student-shell">
+        <header class="student-header">
+            <a class="brand" href="/"><span class="brand-mark">✦</span><span>prato <strong>vivo</strong></span></a>
+            <span class="student-header-label">ÁREA DA EQUIPE</span>
+        </header>
+        <section class="student-login">
+            <p class="eyebrow">ACESSO RESTRITO</p>
+            <h1>Área da<br><em>equipe.</em></h1>
+            <p>Entre com a senha de acesso dos funcionários.</p>
+            <form action="/login" method="post">
+                <label for="staff-password">Senha da equipe</label>
+                <div class="student-code-entry"><input id="staff-password" name="password" type="password" autocomplete="current-password" required><button class="primary-button" type="submit">Entrar</button></div>
+                <% if (error) { %><p class="student-feedback" role="alert"><%= error %></p><% } %>
+            </form>
+        </section>
+    </main>
+</body>
+</html>

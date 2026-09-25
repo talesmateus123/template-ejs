@@ -1,18 +1,48 @@
 <!DOCTYPE html>
-<html>
+<html lang="pt-BR">
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title><%= titulo %></title>
+    <meta name="theme-color" content="#f7f4ee">
+    <title><%= titulo %> | Alimentação escolar</title>
     <link rel="icon" type="image/svg+xml" href="/assets/favicon.svg">
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=DM+Sans:wght@400;500;600;700&family=Fraunces:opsz,wght@9..144,600;9..144,700&display=swap" rel="stylesheet">
     <link rel="stylesheet" href="/css/main.css">
     <link rel="stylesheet" href="/css/index.css">
+    <link rel="stylesheet" href="/css/meals.css">
+    <link rel="stylesheet" href="/css/logout.css">
 </head>
 <body>
-    <div class="container">
-        <h1><%= titulo %></h1>
-        <!-- Desenvolver o conteúdo da página a partir daqui -->
-
-    </div>
+<div class="app-shell">
+    <aside class="sidebar">
+        <a class="brand" href="/"><span class="brand-mark">✦</span><span>prato <strong>vivo</strong></span></a>
+        <div class="profile"><div class="avatar">MC</div><div><strong>Marina Costa</strong><small>Nutrição escolar</small></div><span class="status-dot"></span></div>
+        <nav class="nav" aria-label="Navegação principal">
+            <a class="nav-link active" href="#inicio" data-section="inicio"><span>◈</span> Visão geral</a>
+            <a class="nav-link" href="#cardapio" data-section="cardapio"><span>▦</span> Cardápio</a>
+            <a class="nav-link" href="#alunos" data-section="alunos"><span>♧</span> Alunos</a>
+            <a class="nav-link" href="#relatorios" data-section="relatorios"><span>▤</span> Relatórios</a>
+        </nav>
+        <div class="sidebar-bottom"><form class="logout-form" action="/logout" method="post"><button class="logout-button" type="submit"><span aria-hidden="true">↪</span> Sair da equipe</button></form><p>Prato Vivo <span>v1.0</span></p></div>
+    </aside>
+    <main class="main-content">
+        <header class="topbar"><button class="menu-toggle" aria-label="Abrir menu">☰</button><div class="crumb">CARDÁPIO E ALIMENTAÇÃO ESCOLAR</div><div class="top-actions"><button class="icon-button" title="Notificações" id="notification-button">♢<span class="notification-dot"></span></button><button class="user-button"><span class="avatar small">MC</span><span>Marina Costa</span><span>⌄</span></button></div></header>
+        <div class="content-wrap">
+            <section id="inicio" class="page-section active-section">
+                <div class="welcome"><div><p class="eyebrow">BOM DIA, MARINA</p><h1>Alimentar bem é<br><em>cuidar do futuro.</em></h1><p class="subheading">Acompanhe hoje a alimentação da sua escola.</p></div><div class="date-card"><span>HOJE</span><strong>16</strong><small>SET · QUARTA</small></div></div>
+                <div class="metric-grid"><article class="metric-card coral"><span class="metric-icon">♧</span><small>ALUNOS ATIVOS</small><strong id="students-count">--</strong><p>na escola hoje</p></article><article class="metric-card yellow"><span class="metric-icon">✓</span><small>PRESENÇAS HOJE</small><strong id="present-count">--</strong><p><b class="up">↑ 8%</b> vs. ontem</p></article><article class="metric-card mint"><span class="metric-icon">◒</span><small>REFEIÇÕES SERVIDAS</small><strong id="consumed-count">--</strong><p>de <span id="prepared-count">--</span> preparadas</p></article><article class="metric-card blue"><span class="metric-icon">⌁</span><small>COBERTURA ESTIMADA</small><strong id="coverage-count">--%</strong><p>da demanda prevista</p></article></div>
+                <section class="panel today-menu"><div class="panel-heading"><div><p class="eyebrow">CARDÁPIO DO DIA</p><h2>As três refeições de hoje</h2></div></div><div id="today-menu-list" class="today-menu-list"></div></section>
+                <div class="dashboard-grid"><section class="panel menu-preview"><div class="panel-heading"><div><p class="eyebrow">PRÓXIMOS DIAS</p><h2>Cardápio da semana</h2></div><a href="#cardapio" class="text-link" data-section="cardapio">Ver completo <span>→</span></a></div><div id="menu-list" class="menu-list"></div></section><section class="panel notifications"><div class="panel-heading"><div><p class="eyebrow">CENTRAL DE AVISOS</p><h2>Notificações</h2></div><span class="count-badge">2 novas</span></div><div id="notification-list" class="notification-list"></div></section></div>
+            </section>
+            <section id="cardapio" class="page-section"><div class="section-title"><div><p class="eyebrow">PLANEJAMENTO NUTRICIONAL</p><h1>Cardápio</h1><p>Planeje café da manhã, almoço e jantar para os cinco dias úteis.</p></div></div><form id="weekly-menu-form" class="panel weekly-menu-form"><div class="week-form-heading"><div><p class="eyebrow">EDIÇÃO DA SEMANA</p><h2>Cardápio e alérgenos por refeição</h2></div><label>Segunda-feira da semana<input type="date" id="week-start" required></label></div><div id="weekly-menu-days" class="weekly-menu-days"></div><div class="week-form-footer"><p id="weekly-menu-feedback" class="feedback" aria-live="polite"></p><button class="primary-button" type="submit">Publicar cardápio semanal</button></div></form><div class="panel menu-table-panel"><div class="filter-row"><span class="legend"><i class="published"></i> Publicado</span></div><div id="full-menu-list" class="full-menu-list"></div></div></section>
+            <section id="alunos" class="page-section"><div class="section-title"><div><p class="eyebrow">COMUNIDADE ESCOLAR</p><h1>Alunos e restrições</h1><p>Identifique cada aluno e cuide das suas necessidades alimentares.</p></div><button class="primary-button" id="new-student-button">+ Cadastrar aluno</button></div><div class="panel students-panel"><div class="search-row"><input id="student-search" placeholder="⌕  Buscar por nome ou matrícula"><span id="student-total"></span></div><div id="students-list" class="students-list"></div></div></section>
+            <section id="relatorios" class="page-section"><div class="section-title"><div><p class="eyebrow">ACOMPANHAMENTO</p><h1>Relatórios</h1><p>Dados que ajudam a planejar melhor cada refeição.</p></div><button class="secondary-button" id="export-button">↓ Exportar dados</button></div><div class="report-grid"><div class="panel report-card"><small>REFEIÇÕES PREPARADAS</small><strong id="report-prepared">--</strong><div class="progress"><span id="prepared-progress"></span></div><p>Meta diária de 140 refeições</p></div><div class="panel report-card"><small>CONSUMO REAL</small><strong id="report-consumed">--</strong><div class="progress mint-progress"><span id="consumed-progress"></span></div><p>Taxa de aproveitamento <b id="consumption-rate">--%</b></p></div><div class="panel report-card wide"><small>PRESENÇA POR TURMA</small><div id="class-report" class="class-report"></div></div></div></section>
+        </div>
+    </main>
+</div>
+<div id="toast" class="toast" role="status"></div>
+<script src="/js/app.js"></script>
 </body>
 </html>

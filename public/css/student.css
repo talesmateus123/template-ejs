@@ -1,0 +1,51 @@
+body.student-page{min-height:100vh;background-color:#f7f4ee;background-image:radial-gradient(ellipse at 82% 12%,rgba(218,235,220,.65),transparent 32%),linear-gradient(135deg,transparent 68%,rgba(239,184,117,.12) 68%,rgba(239,184,117,.12) 68.3%,transparent 68.3%)}
+.student-shell{width:min(960px,calc(100% - 40px));margin:0 auto;padding:25px 0 70px}
+.student-header{display:flex;align-items:center;justify-content:space-between;padding:0 0 19px;border-bottom:1px solid #dedbd2}
+.student-header .brand{color:#33423a}
+.student-header-label{font-size:10px;font-weight:700;letter-spacing:1px;color:#74796e}
+.student-login{width:min(540px,100%);margin:90px auto 0;padding:0 0 50px}
+.student-login h1,.student-welcome h1{font-family:Fraunces,Georgia,serif;font-size:48px;line-height:1.08;font-weight:600;color:#293a31;margin:0 0 14px}
+.student-login h1 em,.student-welcome h1 em{color:#d76f58;font-weight:600}
+.student-login>p:not(.eyebrow),.student-welcome>div>p:not(.eyebrow){max-width:440px;color:#69746b;font-size:14px;line-height:1.7}
+.student-login form{margin-top:30px}
+.student-login label{display:block;font-size:12px;font-weight:700;color:#455248;margin-bottom:8px}
+.student-code-entry{display:flex;gap:10px}
+.student-code-entry input{min-width:0;flex:1;border:1px solid #dcd9d0;border-radius:5px;padding:13px 14px;background:#fffdf9;color:#293a31;font:600 15px 'DM Sans',sans-serif;text-transform:uppercase}
+.student-code-entry input:focus{outline:2px solid #d98a71;outline-offset:1px}
+.student-code-entry .primary-button{white-space:nowrap}
+.student-feedback{min-height:20px;margin:10px 0 0;color:#c65c49;font-size:12px}
+.student-content{padding-top:42px}
+.student-content[hidden],.student-login[hidden],.student-attendance-form[hidden],.student-confirmed[hidden]{display:none}
+.student-welcome{display:flex;align-items:flex-start;justify-content:space-between;gap:20px;padding-bottom:30px}
+.student-welcome h1{font-size:38px}
+.student-welcome .eyebrow{margin-bottom:10px}
+.text-button{border:0;background:transparent;color:#68746a;text-decoration:underline;cursor:pointer;font:600 12px 'DM Sans',sans-serif;padding:9px 0}
+.student-section{padding:25px 0 34px;border-top:1px solid #dedbd2}
+.student-section-heading{display:flex;align-items:end;justify-content:space-between;gap:18px;margin-bottom:20px}
+.student-section-heading h2{font-family:Fraunces,Georgia,serif;font-size:25px;color:#2d3c33;margin:0}
+.student-section-heading time{font-size:12px;color:#70796f;text-transform:capitalize}
+.student-today-menu{display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:15px}
+.student-meal{padding:5px 14px 9px;border-left:2px solid #df816a;min-width:0}
+.student-meal h3,.student-week-day h3{font-size:13px;margin:0 0 9px;color:#344239}
+.student-meal p{font-size:14px;line-height:1.6;margin:0 0 8px;color:#354239}
+.student-meal small,.student-week-meal small{display:block;font-size:11px;line-height:1.5;color:#787e74}
+.student-meal .student-allergens,.student-week-meal small{color:#9a6656;margin-top:3px}
+.student-attendance-form{margin-top:23px;padding-top:20px;border-top:1px dashed #dcd9d0}
+.student-attendance-form fieldset{border:0;padding:0;margin:0}
+.student-attendance-form legend{font-size:12px;font-weight:700;color:#455248;margin-bottom:10px}
+.student-meal-choices{display:flex;flex-wrap:wrap;gap:8px}
+.student-meal-choice{display:flex;align-items:center;gap:8px;padding:10px 12px;border:1px solid #dedbd2;border-radius:5px;background:#fffdf9;color:#4f5e53;font-size:12px;cursor:pointer}
+.student-meal-choice:has(input:checked){border-color:#dc806b;background:#fff1eb;color:#b65343}
+.student-meal-choice input{accent-color:#d76f58}
+.student-attendance-form .primary-button{margin-top:8px}
+.student-attendance-form .primary-button:disabled{opacity:.55;cursor:not-allowed}
+.student-confirmed{margin-top:20px;padding:14px 16px;border-left:3px solid #679777;background:#eaf2e9;color:#365b44;font-size:13px}
+.student-week-menu{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:0 28px}
+.student-week-day{padding:15px 0;border-bottom:1px solid #e3dfd6;min-width:0}
+.student-week-day h3{text-transform:capitalize}
+.student-week-meal{display:grid;grid-template-columns:115px minmax(0,1fr);gap:4px 10px;padding:5px 0;font-size:11px}
+.student-week-meal strong{color:#68736a}
+.student-week-meal span{color:#354239;overflow-wrap:anywhere}
+.student-week-meal small{grid-column:2}
+.student-empty{color:#7e837b;font-size:12px}
+@media(max-width:640px){.student-shell{width:min(100% - 30px,520px);padding-top:17px}.student-login{margin-top:62px}.student-login h1{font-size:40px}.student-welcome h1{font-size:32px}.student-today-menu,.student-week-menu{grid-template-columns:1fr}.student-today-menu{gap:12px}.student-section-heading{align-items:flex-start;flex-direction:column}.student-code-entry{align-items:stretch;flex-direction:column}.student-code-entry .primary-button{width:100%}.student-week-meal{grid-template-columns:105px minmax(0,1fr)}}

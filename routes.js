@@ -1,13 +1,261 @@
 import express from "express";
-import database from "./database.js";
+import { createHmac, randomBytes, timingSafeEqual } from 'node:crypto';
+import { generateStudentAccessCode, readStore, writeStore } from "./database.js";
 
 const app = express();
+const mealTypes = ['cafe-da-manha', 'almoco', 'jantar'];
+const authCookieName = 'prato_vivo_auth';
+const fallbackAuthSecret = randomBytes(32).toString('hex');
 
-// ROTAS
+function normalizeMenuItem(item) {
+    return { ...item, mealType: item.mealType || 'almoco', allergens: Array.isArray(item.allergens) ? item.allergens : [] };
+}
 
-// Página inicial
+function menuForDate(menu, date) {
+    return menu.filter((item) => item.date === date).map(normalizeMenuItem);
+}
+
+function addMenuNotification(store, title, text) {
+    store.notifications.unshift({ id: Date.now() + Math.random(), title, text, date: 'agora', read: false });
+}
+
+function studentFromIdentifier(store, identifier) {
+    const normalizedIdentifier = String(identifier || '').trim().toUpperCase();
+    return store.students.find((student) => student.accessCode === normalizedIdentifier || String(student.enrollment).trim().toUpperCase() === normalizedIdentifier);
+}
+
+function authSecret() {
+    return process.env.JWT_SECRET || fallbackAuthSecret;
+}
+
+function createAuthToken(payload) {
+    const encodedPayload = Buffer.from(JSON.stringify({ ...payload, expiresAt: Date.now() + 8 * 60 * 60 * 1000 })).toString('base64url');
+    const signature = createHmac('sha256', authSecret()).update(encodedPayload).digest('base64url');
+    return `${encodedPayload}.${signature}`;
+}
+
+function readAuthToken(token) {
+    if (!token) return null;
+    const [encodedPayload, signature] = token.split('.');
+    if (!encodedPayload || !signature) return null;
+    const expectedSignature = createHmac('sha256', authSecret()).update(encodedPayload).digest();
+    let providedSignature;
+    try {
+        providedSignature = Buffer.from(signature, 'base64url');
+    } catch {
+        return null;
+    }
+    if (providedSignature.length !== expectedSignature.length || !timingSafeEqual(providedSignature, expectedSignature)) return null;
+    try {
+        const payload = JSON.parse(Buffer.from(encodedPayload, 'base64url').toString());
+        return payload.expiresAt > Date.now() ? payload : null;
+    } catch {
+        return null;
+    }
+}
+
+function setAuthCookie(res, payload) {
+    const secure = process.env.NODE_ENV === 'production' ? '; Secure' : '';
+    res.set('Set-Cookie', `${authCookieName}=${createAuthToken(payload)}; HttpOnly; SameSite=Strict; Path=/; Max-Age=28800${secure}`);
+}
+
+function clearAuthCookie(res) {
+    const secure = process.env.NODE_ENV === 'production' ? '; Secure' : '';
+    res.set('Set-Cookie', `${authCookieName}=; HttpOnly; SameSite=Strict; Path=/; Max-Age=0${secure}`);
+}
+
+function requireEmployee(req, res) {
+    if (req.auth?.role === 'funcionario') return true;
+    res.status(403).json({ error: 'Somente funcionários autorizados podem acessar esta área.' });
+    return false;
+}
+
+function requireStudent(req, res) {
+    if (req.auth?.role === 'aluno') return true;
+    res.status(401).json({ error: 'Entre no portal com seu código ou matrícula.' });
+    return false;
+}
+
+app.use(express.urlencoded({ extended: true }));
+app.use(express.json());
+app.use((req, res, next) => {
+    const cookies = Object.fromEntries(String(req.headers.cookie || '').split(';').map((part) => part.trim().split(/=(.*)/s).slice(0, 2)).filter(([name, value]) => name && value));
+    req.auth = readAuthToken(cookies[authCookieName]);
+    next();
+});
+
 app.get('/', async (req, res) => {
-    res.render('index', { titulo: 'Bem-vindo ao EJS!' });
+    if (req.auth?.role === 'aluno') return res.redirect('/aluno');
+    if (req.auth?.role !== 'funcionario') return res.status(401).render('employee-login', { titulo: 'Acesso da equipe', error: '' });
+    res.render('index', { titulo: 'Prato Vivo' });
+});
+
+app.post('/login', (req, res) => {
+    if (req.auth?.role === 'aluno') return res.redirect('/aluno');
+    const configuredPassword = process.env.STAFF_PASSWORD;
+    if (!configuredPassword) return res.status(503).render('employee-login', { titulo: 'Acesso da equipe', error: 'O acesso da equipe ainda não foi configurado.' });
+    const suppliedPassword = Buffer.from(String(req.body.password || ''));
+    const expectedPassword = Buffer.from(configuredPassword);
+    const validPassword = suppliedPassword.length === expectedPassword.length && timingSafeEqual(suppliedPassword, expectedPassword);
+    if (!validPassword) return res.status(401).render('employee-login', { titulo: 'Acesso da equipe', error: 'Senha incorreta.' });
+    setAuthCookie(res, { role: 'funcionario' });
+    res.redirect('/');
+});
+
+app.post('/logout', (req, res) => {
+    clearAuthCookie(res);
+    res.redirect('/');
+});
+
+app.get('/aluno', (req, res) => {
+    if (req.auth?.role === 'funcionario') return res.redirect('/');
+    res.render('student', { titulo: 'Área do aluno' });
+});
+
+app.post('/api/student/login', (req, res) => {
+    if (req.auth?.role === 'funcionario') return res.status(403).json({ error: 'Funcionários devem acessar a área da equipe.' });
+    if (req.auth?.role === 'aluno') return res.status(403).json({ error: 'Saia do portal antes de entrar com outro aluno.' });
+    const store = readStore();
+    const student = studentFromIdentifier(store, req.body.identifier);
+    if (!student) return res.status(401).json({ error: 'Matrícula ou código do aluno inválido.' });
+    setAuthCookie(res, { role: 'aluno', studentId: student.id });
+    res.json({ student: { name: student.name, className: student.className } });
+});
+
+app.post('/api/student/logout', (req, res) => {
+    if (!requireStudent(req, res)) return;
+    clearAuthCookie(res);
+    res.json({ ok: true });
+});
+
+app.get('/api/student/portal', (req, res) => {
+    if (!requireStudent(req, res)) return;
+    const store = readStore();
+    const student = store.students.find((item) => item.id === req.auth.studentId);
+    if (!student) return res.status(401).json({ error: 'Acesso do aluno expirado. Entre novamente.' });
+    const today = new Date().toISOString().slice(0, 10);
+    const todayDate = new Date(`${today}T00:00:00Z`);
+    const dayOfWeek = todayDate.getUTCDay();
+    todayDate.setUTCDate(todayDate.getUTCDate() + (dayOfWeek >= 6 ? 8 - dayOfWeek : 1 - dayOfWeek));
+    const weekStart = todayDate.toISOString().slice(0, 10);
+    const weekEndDate = new Date(todayDate);
+    weekEndDate.setUTCDate(weekEndDate.getUTCDate() + 4);
+    const weekEnd = weekEndDate.toISOString().slice(0, 10);
+    const publishedMenu = store.menu.filter((item) => item.status === 'Publicado' && item.date >= weekStart && item.date <= weekEnd).map(normalizeMenuItem).sort((a, b) => a.date.localeCompare(b.date));
+    const attendance = store.attendance.find((item) => item.studentId === student.id && item.date === today);
+    const selection = store.mealSelections.find((item) => item.studentId === student.id && item.date === today);
+    res.set('Cache-Control', 'no-store');
+    res.json({ student: { name: student.name, className: student.className }, today, menu: publishedMenu, confirmed: Boolean(attendance), selectedMeals: selection?.meals || attendance?.meals || [] });
+});
+
+app.post('/api/student/attendance', (req, res) => {
+    if (!requireStudent(req, res)) return;
+    const store = readStore();
+    const student = store.students.find((item) => item.id === req.auth.studentId);
+    if (!student) return res.status(401).json({ error: 'Acesso do aluno expirado. Entre novamente.' });
+    const date = new Date().toISOString().slice(0, 10);
+    const selectedMeals = Array.isArray(req.body.meals) ? [...new Set(req.body.meals)] : [];
+    const availableMeals = store.menu.filter((item) => item.date === date && item.status === 'Publicado').map(normalizeMenuItem).map((item) => item.mealType);
+    if (selectedMeals.some((mealType) => !mealTypes.includes(mealType) || !availableMeals.includes(mealType))) return res.status(400).json({ error: 'Escolha somente refeições publicadas para hoje.' });
+    if (store.attendance.some((item) => item.studentId === student.id && item.date === date)) return res.status(409).json({ error: 'Sua presença já foi confirmada hoje.' });
+    const time = new Date().toLocaleTimeString('pt-BR', { hour: '2-digit', minute: '2-digit' });
+    store.mealSelections.push({ id: Date.now(), studentId: student.id, date, meals: selectedMeals });
+    store.attendance.unshift({ id: Date.now() + 1, studentId: student.id, date, time, method: 'Código do aluno', meals: selectedMeals });
+    writeStore(store);
+    res.status(201).json({ name: student.name, date, time, meals: selectedMeals });
+});
+
+app.get('/api/dashboard', (req, res) => {
+    if (!requireEmployee(req, res)) return;
+    const store = readStore();
+    const today = new Date().toISOString().slice(0, 10);
+    const todayAttendance = store.attendance.filter((item) => item.date === today);
+    res.json({ students: store.students.length, present: todayAttendance.length, prepared: store.meals.prepared, consumed: store.meals.consumed, menu: store.menu.map(normalizeMenuItem), attendance: todayAttendance.map((item) => ({ ...item, student: store.students.find((student) => student.id === item.studentId) })), notifications: store.notifications, studentsList: store.students, guardians: store.guardians });
+});
+
+app.post('/api/students', (req, res) => {
+    if (!requireEmployee(req, res)) return;
+    const store = readStore();
+    const { name, enrollment, className, restrictions = [] } = req.body;
+    if (!name || !enrollment || !className) return res.status(400).json({ error: 'Preencha nome, matrícula e turma.' });
+    if (store.students.some((student) => student.enrollment === enrollment)) return res.status(409).json({ error: 'Esta matrícula já está cadastrada.' });
+    const student = { id: Date.now(), name, enrollment, accessCode: generateStudentAccessCode(store.students), className, restrictions: Array.isArray(restrictions) ? restrictions : [] };
+    store.students.push(student);
+    writeStore(store);
+    res.status(201).json(student);
+});
+
+app.patch('/api/students/:id/restrictions', (req, res) => {
+    if (!requireEmployee(req, res)) return;
+    const store = readStore();
+    const student = store.students.find((item) => item.id === Number(req.params.id));
+    if (!student) return res.status(404).json({ error: 'Aluno não encontrado.' });
+    student.restrictions = Array.isArray(req.body.restrictions) ? req.body.restrictions : [];
+    writeStore(store);
+    res.json(student);
+});
+
+app.post('/api/menu', (req, res) => {
+    if (!requireEmployee(req, res)) return;
+    const store = readStore();
+    const { date, meal, dessert, allergens = [], status = 'Publicado', mealType = 'almoco' } = req.body;
+    if (!date || !meal) return res.status(400).json({ error: 'Informe data e prato principal.' });
+    if (!mealTypes.includes(mealType)) return res.status(400).json({ error: 'Tipo de refeição inválido.' });
+    const menuItem = { id: Date.now(), date, mealType, meal, dessert: dessert || '', allergens: Array.isArray(allergens) ? allergens : [], status };
+    const previous = store.menu.find((item) => item.date === date && normalizeMenuItem(item).mealType === mealType);
+    const previousSnapshot = previous && JSON.stringify({ meal: previous.meal, dessert: previous.dessert || '', allergens: previous.allergens || [], status: previous.status });
+    const nextSnapshot = JSON.stringify({ meal: menuItem.meal, dessert: menuItem.dessert, allergens: menuItem.allergens, status: menuItem.status });
+    if (previous) Object.assign(previous, menuItem, { id: previous.id });
+    else store.menu.push(menuItem);
+    if (status === 'Publicado' && (!previous || previousSnapshot !== nextSnapshot)) {
+        addMenuNotification(store, previous ? 'Cardápio alterado' : 'Novo cardápio publicado', `Confira a refeição de ${date}.`);
+    }
+    writeStore(store);
+    res.status(201).json(menuItem);
+});
+
+app.put('/api/menu/week', (req, res) => {
+    if (!requireEmployee(req, res)) return;
+    const days = Array.isArray(req.body.days) ? req.body.days : [];
+    const invalidWeek = days.length !== 5 || days.some((day, index) => {
+        if (!/^\d{4}-\d{2}-\d{2}$/.test(day.date)) return true;
+        const date = new Date(`${day.date}T00:00:00Z`);
+        return Number.isNaN(date.getTime()) || date.toISOString().slice(0, 10) !== day.date || date.getUTCDay() !== index + 1 || !day.meals || mealTypes.some((type) => !day.meals[type] || !String(day.meals[type].meal || '').trim());
+    });
+    if (invalidWeek) {
+        return res.status(400).json({ error: 'Informe uma semana de segunda a sexta com as três refeições de cada dia.' });
+    }
+
+    const store = readStore();
+    const updatedMenu = [];
+    const changedDates = [];
+    days.forEach((day) => {
+        const oldItems = menuForDate(store.menu, day.date).filter((item) => mealTypes.includes(item.mealType));
+        const newItems = mealTypes.map((mealType) => {
+            const entry = day.meals[mealType];
+            return { date: day.date, mealType, meal: String(entry.meal).trim(), dessert: String(entry.dessert || '').trim(), allergens: Array.isArray(entry.allergens) ? entry.allergens.map(String).map((value) => value.trim()).filter(Boolean) : [], status: 'Publicado' };
+        });
+        const oldSnapshot = oldItems.map(({ mealType, meal, dessert, allergens }) => ({ mealType, meal, dessert: dessert || '', allergens })).sort((a, b) => mealTypes.indexOf(a.mealType) - mealTypes.indexOf(b.mealType));
+        const newSnapshot = newItems.map(({ mealType, meal, dessert, allergens }) => ({ mealType, meal, dessert, allergens }));
+        if (JSON.stringify(oldSnapshot) !== JSON.stringify(newSnapshot)) changedDates.push(day.date);
+        newItems.forEach((item) => {
+            const oldItem = store.menu.find((existing) => existing.date === day.date && normalizeMenuItem(existing).mealType === item.mealType);
+            item.id = oldItem ? oldItem.id : Date.now() + Math.random();
+            updatedMenu.push(item);
+        });
+        store.menu = store.menu.filter((item) => item.date !== day.date);
+    });
+    store.menu.push(...updatedMenu);
+    changedDates.forEach((date) => addMenuNotification(store, 'Cardápio alterado', `O cardápio de ${date} foi atualizado. Confira as refeições e os alérgenos.`));
+    writeStore(store);
+    res.json({ days: updatedMenu, changedDates });
+});
+
+app.get('/api/reports', (req, res) => {
+    if (!requireEmployee(req, res)) return;
+    const store = readStore();
+    const countByClass = store.students.reduce((result, student) => { result[student.className] = (result[student.className] || 0) + store.attendance.filter((item) => item.studentId === student.id).length; return result; }, {});
+    res.json({ meals: store.meals, attendanceTotal: store.attendance.length, countByClass });
 });
 
 export default app;
