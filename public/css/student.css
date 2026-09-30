@@ -13,6 +13,12 @@ body.student-page{min-height:100vh;background-color:#f7f4ee;background-image:rad
 .student-code-entry input{min-width:0;flex:1;border:1px solid #dcd9d0;border-radius:5px;padding:13px 14px;background:#fffdf9;color:#293a31;font:600 15px 'DM Sans',sans-serif;text-transform:uppercase}
 .student-code-entry input:focus{outline:2px solid #d98a71;outline-offset:1px}
 .student-code-entry .primary-button{white-space:nowrap}
+.staff-password-entry{display:flex;align-items:center;gap:10px}
+.staff-password-entry input{min-width:0;flex:1;border:1px solid #dcd9d0;border-radius:5px;padding:13px 14px;background:#fffdf9;color:#293a31;font:600 15px 'DM Sans',sans-serif}
+.staff-password-entry input:focus{outline:2px solid #d98a71;outline-offset:1px}
+.password-toggle{width:44px;height:44px;flex:0 0 44px;border:1px solid #dcd9d0;border-radius:5px;background:#fffdf9;color:#68746a;font-size:17px;line-height:1;cursor:pointer}
+.password-toggle:hover{border-color:#df806b;color:#df644f;background:#fff1eb}
+.password-toggle:focus-visible{outline:2px solid #df806b;outline-offset:2px}
 .student-feedback{min-height:20px;margin:10px 0 0;color:#c65c49;font-size:12px}
 .student-content{padding-top:42px}
 .student-content[hidden],.student-login[hidden],.student-attendance-form[hidden],.student-confirmed[hidden]{display:none}
@@ -48,4 +54,4 @@ body.student-page{min-height:100vh;background-color:#f7f4ee;background-image:rad
 .student-week-meal span{color:#354239;overflow-wrap:anywhere}
 .student-week-meal small{grid-column:2}
 .student-empty{color:#7e837b;font-size:12px}
-@media(max-width:640px){.student-shell{width:min(100% - 30px,520px);padding-top:17px}.student-login{margin-top:62px}.student-login h1{font-size:40px}.student-welcome h1{font-size:32px}.student-today-menu,.student-week-menu{grid-template-columns:1fr}.student-today-menu{gap:12px}.student-section-heading{align-items:flex-start;flex-direction:column}.student-code-entry{align-items:stretch;flex-direction:column}.student-code-entry .primary-button{width:100%}.student-week-meal{grid-template-columns:105px minmax(0,1fr)}}
+@media(max-width:640px){.student-shell{width:min(100% - 30px,520px);padding-top:17px}.student-login{margin-top:62px}.student-login h1{font-size:40px}.student-welcome h1{font-size:32px}.student-today-menu,.student-week-menu{grid-template-columns:1fr}.student-today-menu{gap:12px}.student-section-heading{align-items:flex-start;flex-direction:column}.student-code-entry{align-items:stretch;flex-direction:column}.student-code-entry .primary-button{width:100%}.staff-password-entry{flex-wrap:wrap}.staff-password-entry input{flex:1}.staff-password-entry .primary-button{flex:1}.student-week-meal{grid-template-columns:105px minmax(0,1fr)}}

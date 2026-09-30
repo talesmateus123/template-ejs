@@ -1,61 +1,23 @@
 {
   "students": [
     {
-      "id": 1,
-      "name": "Ana Beatriz Oliveira",
-      "enrollment": "20240128",
-      "className": "5º ano A",
+      "id": 1790607284112,
+      "name": "anisio",
+      "enrollment": "471284",
+      "accessCode": "9B0B6395D0",
+      "className": "2°B",
+      "birthDate": "2026-12-22",
+      "gender": "masculino",
+      "guardianName": "neto",
+      "guardianPhone": "9014801801",
+      "address": "rua hopeless",
+      "status": "ativo",
       "restrictions": [
-        "Lactose"
-      ],
-      "accessCode": "3415167EC8"
-    },
-    {
-      "id": 2,
-      "name": "Caio Mendes Santos",
-      "enrollment": "20240217",
-      "className": "4º ano B",
-      "restrictions": [],
-      "accessCode": "05EDE8968B"
-    },
-    {
-      "id": 3,
-      "name": "Lia Ferreira Costa",
-      "enrollment": "20240306",
-      "className": "3º ano A",
-      "restrictions": [
-        "Amendoim",
-        "Ovo"
-      ],
-      "accessCode": "C7225E4362"
-    },
-    {
-      "id": 4,
-      "name": "Ravi Almeida Rocha",
-      "enrollment": "20240421",
-      "className": "5º ano A",
-      "restrictions": [],
-      "accessCode": "DA330936AE"
-    }
-  ],
-  "guardians": [
-    {
-      "id": 1,
-      "name": "Mariana Oliveira",
-      "email": "mariana@email.com",
-      "studentIds": [
-        1
-      ]
-    },
-    {
-      "id": 2,
-      "name": "João Costa",
-      "email": "joao@email.com",
-      "studentIds": [
-        3
+        "amendoim e maça"
       ]
     }
   ],
+  "guardians": [],
   "menu": [
     {
       "id": 1,
@@ -94,37 +56,7 @@
       "status": "Rascunho"
     }
   ],
-  "attendance": [
-    {
-      "id": 1790362238712,
-      "studentId": 1,
-      "date": "2026-09-25",
-      "time": "14:50",
-      "method": "Código do aluno",
-      "meals": []
-    },
-    {
-      "id": 1,
-      "studentId": 1,
-      "date": "2026-09-16",
-      "time": "11:18",
-      "method": "Matrícula"
-    },
-    {
-      "id": 2,
-      "studentId": 2,
-      "date": "2026-09-16",
-      "time": "11:21",
-      "method": "QR Code"
-    },
-    {
-      "id": 3,
-      "studentId": 3,
-      "date": "2026-09-16",
-      "time": "11:24",
-      "method": "Matrícula"
-    }
-  ],
+  "attendance": [],
   "notifications": [
     {
       "id": 1,

@@ -64,6 +64,13 @@ function clearAuthCookie(res) {
     res.set('Set-Cookie', `${authCookieName}=; HttpOnly; SameSite=Strict; Path=/; Max-Age=0${secure}`);
 }
 
+function passwordMatches(password, configuredPassword = process.env.STAFF_PASSWORD) {
+    if (!configuredPassword) return false;
+    const supplied = Buffer.from(String(password || ''));
+    const expected = Buffer.from(configuredPassword);
+    return supplied.length === expected.length && timingSafeEqual(supplied, expected);
+}
+
 function requireEmployee(req, res) {
     if (req.auth?.role === 'funcionario') return true;
     res.status(403).json({ error: 'Somente funcionários autorizados podem acessar esta área.' });
@@ -94,9 +101,7 @@ app.post('/login', (req, res) => {
     if (req.auth?.role === 'aluno') return res.redirect('/aluno');
     const configuredPassword = process.env.STAFF_PASSWORD;
     if (!configuredPassword) return res.status(503).render('employee-login', { titulo: 'Acesso da equipe', error: 'O acesso da equipe ainda não foi configurado.' });
-    const suppliedPassword = Buffer.from(String(req.body.password || ''));
-    const expectedPassword = Buffer.from(configuredPassword);
-    const validPassword = suppliedPassword.length === expectedPassword.length && timingSafeEqual(suppliedPassword, expectedPassword);
+    const validPassword = passwordMatches(req.body.password, configuredPassword);
     if (!validPassword) return res.status(401).render('employee-login', { titulo: 'Acesso da equipe', error: 'Senha incorreta.' });
     setAuthCookie(res, { role: 'funcionario' });
     res.redirect('/');
@@ -176,13 +181,42 @@ app.get('/api/dashboard', (req, res) => {
 app.post('/api/students', (req, res) => {
     if (!requireEmployee(req, res)) return;
     const store = readStore();
-    const { name, enrollment, className, restrictions = [] } = req.body;
+    const { name, enrollment, className, birthDate = '', gender = '', guardianName = '', guardianPhone = '', address = '', status = 'ativo', restrictions = [] } = req.body;
     if (!name || !enrollment || !className) return res.status(400).json({ error: 'Preencha nome, matrícula e turma.' });
+    if (!['ativo', 'inativo', 'transferido'].includes(status)) return res.status(400).json({ error: 'Status de aluno inválido.' });
     if (store.students.some((student) => student.enrollment === enrollment)) return res.status(409).json({ error: 'Esta matrícula já está cadastrada.' });
-    const student = { id: Date.now(), name, enrollment, accessCode: generateStudentAccessCode(store.students), className, restrictions: Array.isArray(restrictions) ? restrictions : [] };
+    const student = { id: Date.now(), name: String(name).trim(), enrollment: String(enrollment).trim(), accessCode: generateStudentAccessCode(store.students), className: String(className).trim(), birthDate, gender: String(gender).trim(), guardianName: String(guardianName).trim(), guardianPhone: String(guardianPhone).trim(), address: String(address).trim(), status, restrictions: Array.isArray(restrictions) ? restrictions.map(String).map((item) => item.trim()).filter(Boolean) : [] };
     store.students.push(student);
     writeStore(store);
     res.status(201).json(student);
+});
+
+app.patch('/api/students/:id/status', (req, res) => {
+    if (!requireEmployee(req, res)) return;
+    const store = readStore();
+    const student = store.students.find((item) => item.id === Number(req.params.id));
+    if (!student) return res.status(404).json({ error: 'Aluno não encontrado.' });
+    if (!['ativo', 'inativo', 'transferido'].includes(req.body.status)) return res.status(400).json({ error: 'Status de aluno inválido.' });
+    student.status = req.body.status;
+    writeStore(store);
+    res.json(student);
+});
+
+app.delete('/api/students', (req, res) => {
+    if (!requireEmployee(req, res)) return;
+    if (!passwordMatches(req.body.password)) return res.status(401).json({ error: 'Senha administrativa incorreta.' });
+    const ids = Array.isArray(req.body.ids) ? req.body.ids.map(Number).filter(Number.isInteger) : [];
+    if (!ids.length) return res.status(400).json({ error: 'Selecione pelo menos uma matrícula.' });
+    const store = readStore();
+    const removedIds = new Set(ids);
+    const removedCount = store.students.filter((student) => removedIds.has(student.id)).length;
+    if (!removedCount) return res.status(404).json({ error: 'Nenhuma matrícula selecionada foi encontrada.' });
+    store.students = store.students.filter((student) => !removedIds.has(student.id));
+    store.attendance = store.attendance.filter((item) => !removedIds.has(item.studentId));
+    store.mealSelections = store.mealSelections.filter((item) => !removedIds.has(item.studentId));
+    store.guardians = store.guardians.map((guardian) => ({ ...guardian, studentIds: (guardian.studentIds || []).filter((studentId) => !removedIds.has(studentId)) })).filter((guardian) => guardian.studentIds.length);
+    writeStore(store);
+    res.json({ removedCount });
 });
 
 app.patch('/api/students/:id/restrictions', (req, res) => {

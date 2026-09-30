@@ -23,10 +23,11 @@
             <p>Entre com a senha de acesso dos funcionários.</p>
             <form action="/login" method="post">
                 <label for="staff-password">Senha da equipe</label>
-                <div class="student-code-entry"><input id="staff-password" name="password" type="password" autocomplete="current-password" required><button class="primary-button" type="submit">Entrar</button></div>
+                <div class="staff-password-entry"><input id="staff-password" name="password" type="password" autocomplete="current-password" required><button id="toggle-staff-password" class="password-toggle" type="button" aria-label="Mostrar senha" aria-pressed="false">&#128065;</button><button class="primary-button" type="submit">Entrar</button></div>
                 <% if (error) { %><p class="student-feedback" role="alert"><%= error %></p><% } %>
             </form>
         </section>
     </main>
+    <script src="/js/employee-login.js"></script>
 </body>
 </html>

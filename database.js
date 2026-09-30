@@ -7,27 +7,15 @@ const dataDirectory = path.join(path.dirname(fileURLToPath(import.meta.url)), 'd
 const dataFile = path.join(dataDirectory, 'store.json');
 
 const initialData = {
-    students: [
-        { id: 1, name: 'Ana Beatriz Oliveira', enrollment: '20240128', className: '5º ano A', restrictions: ['Lactose'] },
-        { id: 2, name: 'Caio Mendes Santos', enrollment: '20240217', className: '4º ano B', restrictions: [] },
-        { id: 3, name: 'Lia Ferreira Costa', enrollment: '20240306', className: '3º ano A', restrictions: ['Amendoim', 'Ovo'] },
-        { id: 4, name: 'Ravi Almeida Rocha', enrollment: '20240421', className: '5º ano A', restrictions: [] }
-    ],
-    guardians: [
-        { id: 1, name: 'Mariana Oliveira', email: 'mariana@email.com', studentIds: [1] },
-        { id: 2, name: 'João Costa', email: 'joao@email.com', studentIds: [3] }
-    ],
+    students: [],
+    guardians: [],
     menu: [
         { id: 1, date: '2026-09-16', meal: 'Arroz, feijão, frango assado e salada', dessert: 'Banana', allergens: [], status: 'Publicado' },
         { id: 2, date: '2026-09-17', meal: 'Macarrão ao molho de tomate e legumes', dessert: 'Maçã', allergens: ['Glúten'], status: 'Publicado' },
         { id: 3, date: '2026-09-18', meal: 'Arroz colorido, carne moída e abóbora', dessert: 'Melancia', allergens: [], status: 'Publicado' },
         { id: 4, date: '2026-09-19', meal: 'Sopa de legumes com pão integral', dessert: 'Laranja', allergens: ['Glúten'], status: 'Rascunho' }
     ],
-    attendance: [
-        { id: 1, studentId: 1, date: '2026-09-16', time: '11:18', method: 'Matrícula' },
-        { id: 2, studentId: 2, date: '2026-09-16', time: '11:21', method: 'QR Code' },
-        { id: 3, studentId: 3, date: '2026-09-16', time: '11:24', method: 'Matrícula' }
-    ],
+    attendance: [],
     notifications: [
         { id: 1, title: 'Cardápio de amanhã publicado', text: 'Macarrão ao molho de tomate estará no almoço.', date: '16 set, 09:42', read: false },
         { id: 2, title: 'Atenção aos alergênicos', text: 'O cardápio de amanhã contém glúten.', date: '15 set, 16:10', read: true }

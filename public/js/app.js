@@ -73,7 +73,32 @@ function renderNotifications(items) {
 
 function renderStudents(students) {
     $('#student-total').textContent = `${students.length} alunos cadastrados`;
-    $('#students-list').innerHTML = students.map((student) => `<div class="student-row"><div class="student-name"><span class="student-avatar">${student.name.split(' ').map((part) => part[0]).slice(0, 2).join('')}</span><div><strong>${escapeHtml(student.name)}</strong><small>Matrícula: ${escapeHtml(student.enrollment)} · Código: ${escapeHtml(student.accessCode)}</small></div></div><span>${escapeHtml(student.className)}</span><span>${student.restrictions.length ? student.restrictions.map((restriction) => `<span class="restriction">${escapeHtml(restriction)}</span>`).join('') : '<span class="no-restriction">Nenhuma restrição</span>'}</span><span>${student.restrictions.length ? 'Atenção alimentar' : 'Cadastro completo'}</span></div>`).join('');
+    if (!students.length) {
+        $('#students-list').innerHTML = '<p class="students-empty">cadastre aqui</p>';
+        updateRemoveStudentsButton();
+        return;
+    }
+    const statusLabel = { ativo: 'Ativo', inativo: 'Inativo', transferido: 'Transferido' };
+    $('#students-list').innerHTML = students.map((student) => `<div class="student-row"><label class="student-select"><input type="checkbox" data-student-select="${student.id}" aria-label="Selecionar ${escapeHtml(student.name)}"><span></span></label><div class="student-name"><span class="student-avatar">${student.name.split(' ').map((part) => part[0]).slice(0, 2).join('')}</span><div><strong>${escapeHtml(student.name)}</strong><small>Matrícula: ${escapeHtml(student.enrollment)} · Código: ${escapeHtml(student.accessCode)}</small></div></div><span>${escapeHtml(student.className)}</span><span>${student.restrictions.length ? student.restrictions.map((restriction) => `<span class="restriction">${escapeHtml(restriction)}</span>`).join('') : '<span class="no-restriction">Nenhuma restrição</span>'}</span><label class="student-status-control"><select data-student-status="${student.id}" aria-label="Status de ${escapeHtml(student.name)}">${Object.entries(statusLabel).map(([value, label]) => `<option value="${value}" ${student.status === value || (!student.status && value === 'ativo') ? 'selected' : ''}>${label}</option>`).join('')}</select></label></div>`).join('');
+    document.querySelectorAll('[data-student-select]').forEach((checkbox) => checkbox.addEventListener('change', updateRemoveStudentsButton));
+    document.querySelectorAll('[data-student-status]').forEach((select) => select.addEventListener('change', async (event) => {
+        try { await request(`/api/students/${event.target.dataset.studentStatus}/status`, { method: 'PATCH', body: JSON.stringify({ status: event.target.value }) }); showToast('Status do aluno atualizado.'); } catch (error) { showToast(error.message); await loadDashboard(); }
+    }));
+    updateRemoveStudentsButton();
+}
+
+function updateRemoveStudentsButton() {
+    const button = $('#remove-students-button');
+    if (button) button.disabled = !document.querySelector('[data-student-select]:checked');
+}
+
+function setStudentFormOpen(isOpen) {
+    const form = $('#student-form');
+    const toggle = $('#toggle-student-form');
+    form.hidden = !isOpen;
+    toggle.setAttribute('aria-expanded', String(isOpen));
+    toggle.textContent = isOpen ? 'Fechar cadastro' : '+ Novo cadastro';
+    if (isOpen) form.querySelector('input[name="name"]').focus();
 }
 
 async function loadDashboard() {
@@ -128,7 +153,24 @@ $('#weekly-menu-form').addEventListener('submit', async (event) => {
         await loadDashboard();
     } catch (error) { feedback.textContent = error.message; feedback.style.color = '#d56d5a'; }
 });
-$('#new-student-button').addEventListener('click', async () => { const name = prompt('Nome completo do aluno:'); if (!name) return; const enrollment = prompt('Matrícula:'); const className = prompt('Turma ou série:', '5º ano A'); if (!enrollment || !className) return; try { await request('/api/students', { method: 'POST', body: JSON.stringify({ name, enrollment, className, restrictions: [] }) }); showToast('Aluno cadastrado.'); await loadDashboard(); } catch (error) { showToast(error.message); } });
+$('#student-form').addEventListener('submit', async (event) => {
+    event.preventDefault();
+    const form = event.currentTarget;
+    const payload = Object.fromEntries(new FormData(form).entries());
+    payload.restrictions = String(payload.restrictions || '').split(',').map((item) => item.trim()).filter(Boolean);
+    const feedback = $('#student-form-feedback');
+    try { const student = await request('/api/students', { method: 'POST', body: JSON.stringify(payload) }); feedback.textContent = `${student.name} foi cadastrado. Código de acesso: ${student.accessCode}`; feedback.style.color = '#579775'; form.reset(); await loadDashboard(); setStudentFormOpen(false); showToast('Novo aluno cadastrado.'); } catch (error) { feedback.textContent = error.message; feedback.style.color = '#d56d5a'; }
+});
+$('#cancel-student-button').addEventListener('click', () => { $('#student-form').reset(); $('#student-form-feedback').textContent = ''; });
+$('#toggle-student-form').addEventListener('click', () => setStudentFormOpen($('#student-form').hidden));
+$('#remove-students-button').addEventListener('click', async () => {
+    const ids = [...document.querySelectorAll('[data-student-select]:checked')].map((checkbox) => Number(checkbox.dataset.studentSelect));
+    if (!ids.length) return;
+    if (!confirm(`Remover ${ids.length} matrícula(s) selecionada(s)?`)) return;
+    const password = prompt('Digite a senha do acesso administrativo para confirmar:');
+    if (password === null) return;
+    try { const result = await request('/api/students', { method: 'DELETE', body: JSON.stringify({ ids, password }) }); await loadDashboard(); showToast(`${result.removedCount} matrícula(s) removida(s).`); } catch (error) { showToast(error.message); }
+});
 $('#student-search').addEventListener('input', (event) => { const term = event.target.value.toLowerCase(); renderStudents(state.dashboard.studentsList.filter((student) => `${student.name} ${student.enrollment}`.toLowerCase().includes(term))); });
 $('#export-button').addEventListener('click', () => { const blob = new Blob([JSON.stringify(state.report, null, 2)], { type: 'application/json' }); const link = document.createElement('a'); link.href = URL.createObjectURL(blob); link.download = 'relatorio-prato-vivo.json'; link.click(); URL.revokeObjectURL(link.href); showToast('Relatório exportado.'); });
 loadDashboard().catch(() => showToast('Não foi possível carregar os dados.'));
